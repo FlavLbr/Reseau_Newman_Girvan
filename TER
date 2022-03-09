@@ -1,0 +1,204 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import networkx as nx
+import matplotlib.pyplot as plt
+
+G = nx.Graph()
+
+G.add_node(0,label='A')
+G.add_node(1,label='B')
+G.add_node(2,label='C')
+G.add_node(3,label='D')
+G.add_node(4,label='E')
+G.add_node(5,label='F')
+
+G.add_edge(0,1,weight=1)
+G.add_edge(0,2,weight=1)
+G.add_edge(1,2,weight=1)
+G.add_edge(1,3,weight=1)
+G.add_edge(2,4,weight=1)
+G.add_edge(2,3,weight=1)
+G.add_edge(3,4,weight=1)
+G.add_edge(3,5,weight=1)
+G.add_edge(4,5,weight=1)
+
+#affiche les points relier entre eux aussi que le poids de l'arrête
+labels_edges = {}
+labels_edges = {edge:G.edges[edge]['weight'] for edge in G.edges}
+labels_edges
+
+
+#beau dessin
+pos = nx.spring_layout(G)  
+
+# nodes
+nx.draw_networkx_nodes(G, pos, node_size=700,alpha=0.9)
+               
+# labels
+nx.draw_networkx_labels(G, pos, 
+                        font_size=20, 
+                        font_color='black', 
+                        font_family='sans-serif')
+# edges
+nx.draw_networkx_edges(G, pos,width=1)
+nx.draw_networkx_edge_labels(G, pos, edge_labels=labels_edges, style='dashed', font_color='red')
+
+plt.axis('off')
+plt.show()
+
+import sys
+from itertools import combinations
+import collections
+
+def arete_avec(sommet):
+    lien_avec=[]
+    liste=G.edges(sommet)
+    for lien in liste:
+        lien_avec.append(lien[1])
+    return lien_avec
+
+
+def voisins_non_visite(point,noeud_visites):
+    voisins=arete_avec(point)
+    voisins2=[x for x in voisins if x not in noeud_visites] 
+    return voisins2
+    
+
+
+def dijkstra(G,depart,arrivee): 
+    # marche dans le cas ou les arete n'ont pas de points
+    # arbitrairement on met le poids des aretes à 1
+    noeud_visites=[depart]
+    dist_min=[]
+    for noeud in G.nodes:
+        dist_min.append(sys.maxsize)
+    
+    # attribution poids de depart
+    dist_min[depart]=0
+    voisins=arete_avec(depart)
+    for point in voisins:
+        dist_min[point]=1
+        
+    # attribution des poids 
+    bool_arrive=False
+    while noeud_visites!=len(G.nodes) and bool_arrive==False:
+        #faire noeud courant
+        voisins=voisins_non_visite(noeud_visites[len(noeud_visites)-1],noeud_visites)
+        #print(noeud_visites[len(noeud_visites)-1], voisins)
+        for point_courant in voisins:
+            if point_courant==arrivee:
+                bool_arrive=True
+            else:
+                voisins=voisins_non_visite(point_courant,noeud_visites)
+                for point in voisins:
+                    dist=dist_min[point_courant]+1
+                    if dist<dist_min[point]: 
+                        dist_min[point]=dist
+            noeud_visites.append(point_courant)
+    # en combien de point on y arrive
+    print(dist_min[arrivee])
+    
+    # part quel chemin on y arrive: il faut faire une boucle pour que l'on puisse avoir des valeurs plus grande qui précède.
+    matrix1 = [n for n in combinations(G.nodes(),dist_min[arrivee]+1)]
+    beetweness=[]
+    edge=G.edges()
+    for chemin in matrix1:
+        if chemin[0]==depart and chemin[dist_min[arrivee]]==arrivee :
+            bool=True
+            for i in range(0,len(chemin)-1):
+                if chemin[i] < chemin[i+1]:
+                    if (chemin[i],chemin[i+1]) not in edge: bool=False
+                if chemin[i] > chemin[i+1]:
+                    if (chemin[i+1],chemin[i]) not in edge: bool=False
+            if bool:
+                beetweness.append(chemin)
+
+    return beetweness
+
+def Girwan_Newman(Graph):
+    ordre_del=[]
+    
+    while(len(G.edges())>0):
+        #initialision des poids des arettes
+        arettes=[]
+        for i in Graph.edges():
+            arettes.append([i,0])
+        
+        #lancement de dijkstra pour chaque point et attribution poids des arette
+        points=[]
+        for i in Graph.nodes(): points.append(i)
+        for point1 in points:
+            for point2 in points[point1+1:]:
+                #acquisition des chemins les plus cours
+                chemins = dijkstra(Graph,point1,point2)
+                #attribution des poids
+                for chemin in chemins:
+                    for i in range(0,len(chemin)-1):
+                        for arette in arettes:
+                            if (chemin[i],chemin[i+1])==arette[0]:
+                                arette[1]+=1/len(chemins)
+        
+        #enregistrement de l'arette la plus grande
+        poids_max=[0,(0,0)]
+        for arette in arettes:
+            if arette[1] > poids_max[0]:
+                poids_max=[arette[1],arette[0]]
+        
+    
+        #manipulation sur l'enregistreur et le graph
+        ordre_del.append(poids_max[1])
+        print(ordre_del)
+        
+        Graph.remove_edge(poids_max[1][0],poids_max[1][1])
+        
+        nx.draw(Graph,with_labels=True)
+        
+    return ordre_del
+    
+
+
+G = nx.Graph()
+
+G.add_node(0,label='A')
+G.add_node(1,label='B')
+G.add_node(2,label='C')
+G.add_node(3,label='D')
+G.add_node(4,label='E')
+G.add_node(5,label='F')
+
+G.add_edge(0,1,weight=1)
+G.add_edge(0,2,weight=1)
+G.add_edge(1,2,weight=1)
+G.add_edge(1,3,weight=1)
+G.add_edge(2,4,weight=1)
+G.add_edge(2,3,weight=1)
+G.add_edge(3,4,weight=1)
+G.add_edge(3,5,weight=1)
+G.add_edge(4,5,weight=1)
+
+Girwan_Newman(G)
+
+
+G = nx.karate_club_graph()
+nx.draw(G,with_labels=True)
+
+Girwan_Newman(G)
+               
+    
+    
+
+        
+    
+    
+
+  
+    
+    
+    
+    
+    
+    
+    
+    
+    
