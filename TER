@@ -50,6 +50,7 @@ plt.show()
 import sys
 from itertools import combinations
 import collections
+import itertools
 
 def arete_avec(sommet):
     lien_avec=[]
@@ -61,7 +62,9 @@ def arete_avec(sommet):
 
 def voisins_non_visite(point,noeud_visites):
     voisins=arete_avec(point)
-    voisins2=[x for x in voisins if x not in noeud_visites] 
+    #print(point)
+    voisins2=[x for x in voisins if x not in noeud_visites]
+    #print(voisins2)
     return voisins2
     
 
@@ -69,6 +72,7 @@ def voisins_non_visite(point,noeud_visites):
 def dijkstra(G,depart,arrivee): 
     # marche dans le cas ou les arete n'ont pas de points
     # arbitrairement on met le poids des aretes à 1
+    print(depart, arrivee)
     noeud_visites=[depart]
     dist_min=[]
     for noeud in G.nodes:
@@ -85,25 +89,34 @@ def dijkstra(G,depart,arrivee):
     while noeud_visites!=len(G.nodes) and bool_arrive==False:
         #faire noeud courant
         voisins=voisins_non_visite(noeud_visites[len(noeud_visites)-1],noeud_visites)
-        #print(noeud_visites[len(noeud_visites)-1], voisins)
-        for point_courant in voisins:
-            if point_courant==arrivee:
-                bool_arrive=True
-            else:
-                voisins=voisins_non_visite(point_courant,noeud_visites)
-                for point in voisins:
-                    dist=dist_min[point_courant]+1
-                    if dist<dist_min[point]: 
-                        dist_min[point]=dist
-            noeud_visites.append(point_courant)
+        print(noeud_visites[len(noeud_visites)-1], voisins)
+        if voisins!=[]:
+            for point_courant in voisins:
+                if point_courant==arrivee:
+                    bool_arrive=True
+                else:
+                    voisins=voisins_non_visite(point_courant,noeud_visites)
+                    for point in voisins:
+                        dist=dist_min[point_courant]+1
+                        if dist<dist_min[point]: 
+                            dist_min[point]=dist
+                noeud_visites.append(point_courant) 
+            print('pas vide')
+        else: noeud_visites.append(noeud_visites[len(noeud_visites)-2])
+        
+        print(noeud_visites)
     # en combien de point on y arrive
-    print(dist_min[arrivee])
+    return (dist_min[arrivee])
     
-    # part quel chemin on y arrive: il faut faire une boucle pour que l'on puisse avoir des valeurs plus grande qui précède.
+    """# part quel chemin on y arrive: il faut faire une boucle pour que l'on puisse avoir des valeurs plus grande qui précède.
     matrix1 = [n for n in combinations(G.nodes(),dist_min[arrivee]+1)]
+    pair_order_list = itertools.permutations(G.nodes(), dist_min[arrivee]+1) 
+
+    matrix1=list(pair_order_list)
     beetweness=[]
     edge=G.edges()
     for chemin in matrix1:
+        #print(chemin,dist_min[arrivee] )
         if chemin[0]==depart and chemin[dist_min[arrivee]]==arrivee :
             bool=True
             for i in range(0,len(chemin)-1):
@@ -114,7 +127,8 @@ def dijkstra(G,depart,arrivee):
             if bool:
                 beetweness.append(chemin)
 
-    return beetweness
+    return beetweness"""
+
 
 def Girwan_Newman(Graph):
     ordre_del=[]
@@ -153,6 +167,7 @@ def Girwan_Newman(Graph):
         Graph.remove_edge(poids_max[1][0],poids_max[1][1])
         
         nx.draw(Graph,with_labels=True)
+        print('coucou')
         
     return ordre_del
     
@@ -184,8 +199,6 @@ G = nx.karate_club_graph()
 nx.draw(G,with_labels=True)
 
 Girwan_Newman(G)
-               
-    
     
 
         
